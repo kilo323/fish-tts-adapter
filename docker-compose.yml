@@ -20,7 +20,7 @@ services:
       - REQUEST_TIMEOUT=60
     volumes:
       # Voice mapping config (optional — maps OpenAI voice names to Fish Audio IDs)
-      - ./config:/config:ro
+      - ./config:/config
     networks:
       - unraid-net
 
