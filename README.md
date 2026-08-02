@@ -47,7 +47,7 @@ The adapter listens on **port 8110** (configurable in `docker-compose.yml`).
 ### OpenAI-compatible request
 
 ```bash
-curl -X POST http://10.0.0.10:8110/v1/audio/speech \
+curl -X POST http://localhost:8110/v1/audio/speech \
   -H "Content-Type: application/json" \
   -d '{
     "model": "tts-1",
@@ -65,7 +65,7 @@ curl -X POST http://10.0.0.10:8110/v1/audio/speech \
 from openai import OpenAI
 
 client = OpenAI(
-    base_url="http://10.0.0.10:8110/v1",
+    base_url="http://localhost:8110/v1",
     api_key="not-needed",  # adapter uses its own Fish Audio key
 )
 
@@ -80,7 +80,7 @@ response.stream_to_file("output.mp3")
 ### List available voices
 
 ```bash
-curl http://10.0.0.10:8110/voices
+curl http://localhost:8110/voices
 ```
 
 ## Voice Mapping
