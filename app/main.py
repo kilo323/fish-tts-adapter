@@ -25,7 +25,8 @@ FISH_API_KEY = os.environ.get("FISH_AUDIO_API_KEY", "")
 FISH_BASE_URL = os.environ.get("FISH_AUDIO_BASE_URL", "https://api.fish.audio")
 DEFAULT_MODEL = os.environ.get("DEFAULT_FISH_MODEL", "s2.1-pro-free")
 TIMEOUT = int(os.environ.get("REQUEST_TIMEOUT", "60"))
-VOICE_MAP_PATH = os.environ.get("VOICE_MAP_PATH", "/config/voices.json")
+def _voice_map_path() -> str:
+    return os.environ.get("VOICE_MAP_PATH", "/config/voices.json")
 
 # ---------------------------------------------------------------------------
 # Voice map — read from disk every request (hot reload)
@@ -42,9 +43,9 @@ DEFAULT_VOICE_MAP = {
 
 def get_voice_map() -> dict:
     """Load voice map from disk. Returns defaults if file missing or invalid."""
-    if os.path.exists(VOICE_MAP_PATH):
+    if os.path.exists(_voice_map_path()):
         try:
-            with open(VOICE_MAP_PATH) as f:
+            with open(_voice_map_path()) as f:
                 data = json.load(f)
             if isinstance(data, dict):
                 return data
@@ -55,8 +56,8 @@ def get_voice_map() -> dict:
 
 def save_voice_map(voices: dict):
     """Write voice map to disk."""
-    os.makedirs(os.path.dirname(VOICE_MAP_PATH), exist_ok=True)
-    with open(VOICE_MAP_PATH, "w") as f:
+    os.makedirs(os.path.dirname(_voice_map_path()), exist_ok=True)
+    with open(_voice_map_path(), "w") as f:
         json.dump(voices, f, indent=2)
     logger.info("Saved voice map (%d entries)", len(voices))
 
