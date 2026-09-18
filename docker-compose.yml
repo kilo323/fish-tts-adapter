@@ -1,7 +1,8 @@
-version: "3.8"
-
 services:
   fish-tts-adapter:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: fish-tts-adapter:latest
     container_name: fish-tts-adapter
     restart: unless-stopped
@@ -11,19 +12,14 @@ services:
       # Required: Your Fish Audio API key
       - FISH_AUDIO_API_KEY=${FISH_AUDIO_API_KEY}
       # Optional: Override Fish Audio base URL
-      - FISH_AUDIO_BASE_URL=https://api.fish.audio
+      - FISH_AUDIO_BASE_URL=${FISH_AUDIO_BASE_URL-https://api.fish.audio}
       # Optional: Default Fish Audio model (s2.1-pro-free, s2.1-pro, s2-pro, s1)
-      - DEFAULT_FISH_MODEL=s2.1-pro-free
+      - DEFAULT_FISH_MODEL=${DEFAULT_FISH_MODEL-s2.1-pro-free}
       # Optional: HD model for tts-1-hd requests
-      - HD_FISH_MODEL=s2.1-pro
+      - HD_FISH_MODEL=${HD_FISH_MODEL-s2.1-pro}
       # Optional: Request timeout in seconds
-      - REQUEST_TIMEOUT=60
+      - REQUEST_TIMEOUT=${REQUEST_TIMEOUT-60}
     volumes:
       # Voice mapping config (optional — maps OpenAI voice names to Fish Audio IDs)
       - ./config:/config
-    networks:
-      - unraid-net
 
-networks:
-  unraid-net:
-    external: true

@@ -301,6 +301,13 @@ ADMIN_HTML = """<!DOCTYPE html>
   .btn-add:hover { background: #1d4ed8; }
   .btn-del { background: #ef4444; color: white; padding: 0.3rem 0.6rem; font-size: 0.8rem; }
   .btn-del:hover { background: #dc2626; }
+  .btn-test { background: #16a34a; color: white; padding: 0.3rem 0.6rem; font-size: 0.8rem; }
+  .btn-test:hover { background: #15803d; }
+  .btn-test:disabled { background: #475569; cursor: wait; }
+  h2 { font-size: 1.1rem; margin-bottom: 0.75rem; color: #e2e8f0; }
+  .test-row { display: flex; gap: 0.5rem; align-items: center; }
+  .test-row input { flex: 1; }
+  audio { width: 100%; margin-top: 1rem; }
   .toast { position: fixed; top: 1rem; right: 1rem; background: #16a34a; color: white;
            padding: 0.75rem 1.25rem; border-radius: 8px; font-weight: 500;
            opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 100; }
@@ -315,8 +322,16 @@ ADMIN_HTML = """<!DOCTYPE html>
 <p class="subtitle">Fish Audio TTS Adapter — <a href="/">API</a> · <a href="/v1/models">Models</a> · <a href="/voices">Voices JSON</a></p>
 
 <div class="card">
+  <h2>🔊 Test a voice</h2>
+  <div class="test-row">
+    <input id="testText" value="Hello! This is a test of the Fish Audio TTS adapter." />
+  </div>
+  <audio id="player" controls style="display:none"></audio>
+</div>
+
+<div class="card">
   <table>
-    <thead><tr><th>Voice Name</th><th>Fish Audio ID</th><th></th></tr></thead>
+    <thead><tr><th>Voice Name</th><th>Fish Audio ID</th><th>Test</th><th></th></tr></thead>
     <tbody id="voices"></tbody>
   </table>
   <div class="add-row">
@@ -341,13 +356,14 @@ async function load() {
   const data = await r.json();
   const tbody = document.getElementById('voices');
   if (Object.keys(data).length === 0) {
-    tbody.innerHTML = '<tr><td colspan="3" class="empty">No voices configured</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" class="empty">No voices configured</td></tr>';
     return;
   }
   tbody.innerHTML = Object.entries(data).map(([name, id]) =>
     `<tr>
       <td class="name">${esc(name)}</td>
       <td class="id">${esc(id)}</td>
+      <td><button class="btn-test" onclick="testVoice('${esc(name)}', this)">▶ Test</button></td>
       <td><button class="btn-del" onclick="delVoice('${esc(name)}')">✕</button></td>
     </tr>`
   ).join('');
@@ -375,6 +391,36 @@ async function delVoice(name) {
   await fetch('/admin/voices/' + encodeURIComponent(name), {method: 'DELETE'});
   toast('Deleted ' + name);
   load();
+}
+
+async function testVoice(name, btn) {
+  const text = document.getElementById('testText').value.trim();
+  if (!text) { toast('Enter some test text'); return; }
+  btn.disabled = true;
+  btn.textContent = '⏳';
+  try {
+    const r = await fetch('/v1/audio/speech', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({model: 'tts-1', voice: name, input: text, response_format: 'mp3'})
+    });
+    if (!r.ok) {
+      const err = await r.text();
+      toast('Error ' + r.status + ': ' + err.slice(0, 120));
+      return;
+    }
+    const blob = await r.blob();
+    const player = document.getElementById('player');
+    if (player.src) URL.revokeObjectURL(player.src);
+    player.src = URL.createObjectURL(blob);
+    player.style.display = 'block';
+    player.play();
+  } catch (e) {
+    toast('Request failed: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '▶ Test';
+  }
 }
 
 load();
